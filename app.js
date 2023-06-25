@@ -1,5 +1,8 @@
 "use strict";
 const express = require('express')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken');
+
 const app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -76,6 +79,51 @@ app.get('/get-usrs-n-fruits', async (req, res) => {
 
   try {  
     res.send(await getUsrsNFruits());
+  } catch (error) {
+    console.error(error);
+  }
+
+})
+
+app.post('/login', async (req, res) => {
+
+  try {  
+
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      console.error("Error no ingresó el email o la contraseña");
+    }
+
+    const con = await connection();
+    
+    const [ user ] = (await con.execute(`SELECT * FROM users WHERE email_usrs = ?`, [email]))[0];
+    
+    if (!user) {
+      console.error("Empty data");
+    }
+   
+
+    if (!user.is_active_usrs) {      
+      console.log("user inactive");
+    }
+
+    // user.password = '123456';
+    if (!user.password_usrs) {
+      console.log("password is not defined");
+    }
+
+    const passMatch = await bcrypt.compare(password, user.password_usrs);
+    // console.log(passMatch);
+
+    if (!passMatch) {
+      console.log('Incorrect password');
+    }
+
+    const id_rol = user.id_rol;
+    const token = jwt.sign({id:user.id_usrs,id_rol},'UsersApp-2023-Genius',{ expiresIn: '24h' });
+
+    res.send({ token });
   } catch (error) {
     console.error(error);
   }
