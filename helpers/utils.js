@@ -29,7 +29,34 @@ const getUsersByCompnyId = async (companyId) => {
 }
 
 
+getAllRelData = async () => {
+    const con = await connection();
+
+    const [ rows ] = await con.execute(`select u.*, r.*, c.* from users u 
+    left join roles r on u.id_rol = r.id_rol
+    left join companies c on c.id_comp = u.id_comp`);
+
+    return rows;
+}
+
+
+getUsrsNFruits = async () => {
+    const con = await connection();
+
+    const [ dataFruits ] = (await con.execute(`SELECT COUNT(id_fruts) total FROM users_fruits`))[0];
+
+    const [ dataUsrs ] = (await con.execute(`SELECT COUNT(id_usrs) total FROM users`))[0];
+    
+    return {
+        total_fruit: dataFruits.total,
+        cuantity_persons: dataUsrs.total
+    }
+}
+
+
 module.exports = {
     connection,
-    getUsersByCompnyId
+    getUsersByCompnyId,
+    getAllRelData,
+    getUsrsNFruits
 }
